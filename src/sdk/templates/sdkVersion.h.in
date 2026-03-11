@@ -1,0 +1,38 @@
+#pragma once
+
+#include <compare>
+#include <QStringView>
+
+#include <Infinity/sdk/infinitysdk_export.h>
+
+namespace qone::sdk {
+
+struct INFINITYSDK_EXPORT Version {
+    inline static constexpr int major{ @SDK_VERSION_MAJOR@ };
+    inline static constexpr int minor{ @SDK_VERSION_MINOR@ };
+    inline static constexpr int patch{ @SDK_VERSION_PATCH@ };
+
+    auto operator<=>( const Version& ) const = default;
+
+    constexpr bool isCompatibleWith( const Version& other ) const {
+        if ( major != other.major ) {
+            return false;
+        }
+
+        if ( minor < other.minor ) {
+            return false;
+        }
+
+        return true;
+    }
+};
+
+namespace info {
+
+inline constexpr Version sdkVersion{};
+
+inline QStringView version_string { u"@SDK_VERSION_MAJOR@.@SDK_VERSION_MINOR@.@SDK_VERSION_PATCH@" };
+
+} // namespace info
+
+} // namespace qone::sdk

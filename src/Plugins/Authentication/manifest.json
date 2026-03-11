@@ -1,0 +1,10 @@
+{
+    "name": "Authentication Service",
+    "description": "Core Authentication Provider",
+    "version": "1.0",
+    "uri": "Plugins.Authentication",
+    "category": "System",
+    "required": true,
+    "mainElement": "LoginView",
+    "vendor": "Official"
+}

@@ -1,0 +1,8 @@
+{
+  "name": "infinity-xr",
+  "version-string": "1.0",
+  "dependencies": [
+    "catch2",
+    "spdlog"
+  ]
+}

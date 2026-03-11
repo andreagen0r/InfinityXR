@@ -1,0 +1,72 @@
+#pragma once
+// clang-format off
+${AUTO_GENERATED_FILES_WARNING_MESSAGE}
+#include <QDebug>
+#include <QLoggingCategory>
+#include <QVariantList>
+#include <QMetaType>
+#include <QDataStream>
+
+#include <Infinity/sdk/infinitysdk_export.h>
+
+namespace Infinity::Logging {
+
+struct INFINITYSDK_EXPORT Config {
+    bool enableConsole { true };
+    bool enableFile    { true };
+    QString filePath   { u"logs/infinity.json" };
+    int level { 2 };
+    QString filterRules;
+};
+
+inline QDataStream& operator << ( QDataStream& out, const Config& c ) {
+    out << c.enableConsole
+        << c.enableFile
+        << c.filePath
+        << c.level
+        << c.filterRules;
+    return out;
+}
+
+inline QDataStream& operator >> ( QDataStream& in, Config& c ) {
+    in >> c.enableConsole
+       >> c.enableFile
+       >> c.filePath
+       >> c.level
+       >> c.filterRules;
+    return in;
+}
+
+struct INFINITYSDK_EXPORT Title {
+    explicit Title( QString title )
+        : text( std::move( title ) ) {}
+    explicit Title( QStringView title )
+        : text( title.toString() ) {}
+    explicit Title( QLatin1StringView title )
+        : text( title ) {}
+
+    QString text;
+};
+
+INFINITYSDK_EXPORT QDebug operator<<( QDebug debug, const Title& t );
+
+enum class Type {
+    Debug,
+    Info,
+    Warning,
+    Critical,
+    Fatal,
+};
+
+void INFINITYSDK_EXPORT init( const Config& cfg );
+
+void INFINITYSDK_EXPORT printBanner( const QString& message, Type type = Type::Info );
+
+const QVariantList INFINITYSDK_EXPORT availableCategories();
+
+} // namespace Infinity::Logging
+
+${LOG_CATEGORY_H}
+
+Q_DECLARE_METATYPE( Infinity::Logging::Config )
+// clang-format on

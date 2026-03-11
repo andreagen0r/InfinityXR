@@ -1,0 +1,10 @@
+{
+    "name": "About Plugin",
+    "description": "Fornece a janela de Sobre o Sistema.",
+    "version": "1.0.0",
+    "uri": "Plugins.About",
+    "vendor": "Official",
+    "category": "System",
+    "dependencies": [],
+    "isRequired": true
+}

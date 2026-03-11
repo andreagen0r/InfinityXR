@@ -1,0 +1,292 @@
+// clang-format off
+${AUTO_GENERATED_FILES_WARNING_MESSAGE}
+#include <Infinity/sdk/logging/logger.h>
+
+#include <QMessageLogContext>
+#include <QCoreApplication>
+#include <QStringBuilder>
+#include <QJsonObject>
+#include <QJsonDocument>
+#include <QThread>
+
+#include <string>
+
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/sinks/daily_file_sink.h>
+
+#include <fmt/core.h>
+#include <fmt/color.h>
+
+using namespace Qt::StringLiterals;
+
+${LOG_CATEGORY_CPP}
+namespace {
+
+constexpr int PREFIX_META_WIDTH = 52;
+constexpr int COL_CAT_WIDTH = 22;
+constexpr int COL_TITLE_WIDTH = 35;
+constexpr int MAX_LINE_WIDTH = PREFIX_META_WIDTH + COL_CAT_WIDTH + COL_TITLE_WIDTH;
+
+const auto MAGIC_SPLITTER { "|||"_L1 };
+} // namespace
+
+namespace Infinity::Logging {
+
+QDebug operator<<( QDebug debug, const Title& t ) {
+    QDebugStateSaver saver( debug );
+    debug.nospace().noquote() << MAGIC_SPLITTER << t.text << "||| "_L1;
+    return debug;
+}
+
+QString sanitize( QString text ) {
+
+    if ( text.isEmpty() ) {
+        return text;
+    }
+
+    text = text.trimmed();
+
+    if ( text.size() >= 2 && text.startsWith( u'"' ) && text.endsWith( u'"' ) ) {
+        text = text.mid( 1, text.length() - 2 );
+    }
+
+    return text.trimmed();
+}
+
+std::string formatFullLine( const QString& category, const QString& title, const QString& message ) {
+
+    const QString cat = QString( "["_L1 % category % "]"_L1 ).leftJustified( COL_CAT_WIDTH, u' ' );
+
+    // "Title .......... "
+    QString t = title;
+    if ( t.isEmpty() ) {
+        t = "Log"_L1;
+    }
+
+    const QString dotted = QString( t % " "_L1 ).leftJustified( COL_TITLE_WIDTH, u'.' );
+    const QString final = cat % dotted % " "_L1 % message;
+
+    return final.toUtf8().toStdString();
+}
+
+class JsonFormatter : public spdlog::formatter {
+
+public:
+
+    void format( const spdlog::details::log_msg& msg, spdlog::memory_buf_t& dest ) override {
+        QJsonObject obj;
+        obj["ts"_L1] = QDateTime::currentDateTimeUtc().toString( Qt::ISODateWithMs );
+
+        auto sv_level = spdlog::level::to_string_view( msg.level );
+        obj["level"_L1] = QString::fromUtf8( sv_level.data(), int( sv_level.size() ) );
+
+        // Recuperamos a string completa: "[Category] Title .......... Message"
+        QString fullPayload = QString::fromUtf8( msg.payload.data(), int( msg.payload.size() ) );
+
+        // 1. Extrair Categoria: busca o que está entre []
+        int catStart = fullPayload.indexOf( u'[' );
+        int catEnd = fullPayload.indexOf( u']' );
+        if ( catStart != -1 && catEnd > catStart ) {
+            obj["category"_L1] = fullPayload.mid( catStart + 1, catEnd - catStart - 1 ).trimmed();
+        }
+
+        // 2. Extrair Título e Mensagem
+        // O padrão é: ] Titulo .... Mensagem
+        if ( catEnd != -1 ) {
+            QString remainder = fullPayload.mid( catEnd + 1 );
+            int firstDot = remainder.indexOf( u'.' );
+            int lastDot = remainder.lastIndexOf( u'.' );
+
+            if ( firstDot != -1 ) {
+                // Título é o que está antes dos pontos
+                obj["title"_L1] = remainder.left( firstDot ).trimmed();
+                // Mensagem é o que está após o último ponto
+                obj["msg"_L1] = remainder.mid( lastDot + 1 ).trimmed();
+            } else {
+                obj["msg"_L1] = remainder.trimmed();
+            }
+        } else {
+            obj["msg"_L1] = fullPayload;
+        }
+
+        // Metadados técnicos
+        obj["filename"_L1] = QString::fromLatin1( msg.source.filename );
+        obj["function"_L1] = QString::fromLatin1( msg.source.funcname );
+        obj["line"_L1] = msg.source.line;
+
+        QJsonDocument doc( obj );
+        auto s = doc.toJson( QJsonDocument::Compact );
+        dest.append( s.cbegin(), s.cend() );
+        dest.push_back( ',' );
+        dest.push_back( '\n' );
+    }
+
+    std::unique_ptr<spdlog::formatter> clone() const override {
+        return std::make_unique<JsonFormatter>();
+    }
+};
+
+void qtMessageHandler( QtMsgType type, const QMessageLogContext& context, const QString& msg ) {
+
+    QString title { "Log"_L1 };
+    QString body { msg };
+
+    const QString magicSep { "|||"_L1 };
+
+    // Lógica do MagicSep para separar Título e Body
+    const auto startSep { msg.indexOf( magicSep ) };
+
+    if ( startSep != -1 ) {
+
+        const auto endSep { msg.indexOf( magicSep, startSep + magicSep.length() ) };
+
+        if ( endSep != -1 ) {
+            title = msg.mid( startSep + magicSep.length(), endSep - ( startSep + magicSep.length() ) );
+            body = msg.mid( endSep + magicSep.length() );
+        }
+    }
+
+    body = sanitize( body );
+
+    QString category { ( context.category ) ? QString::fromUtf8( context.category ) : "General"_L1 };
+
+    if ( category == "default"_L1 ) {
+        category = "System"_L1;
+    }
+
+    auto logger { spdlog::get( "main" ) };
+
+    if ( logger == nullptr ) {
+        return;
+    }
+
+    // DETERMINA O NÍVEL
+    spdlog::level::level_enum level;
+    switch ( type ) {
+        case QtDebugMsg:
+            level = spdlog::level::debug;
+            break;
+        case QtInfoMsg:
+            level = spdlog::level::info;
+            break;
+        case QtWarningMsg:
+            level = spdlog::level::warn;
+            break;
+        case QtCriticalMsg:
+            level = spdlog::level::err;
+            break;
+        case QtFatalMsg:
+            level = spdlog::level::critical;
+            break;
+        default:
+            level = spdlog::level::info;
+            break;
+    }
+
+    std::string consoleLine = formatFullLine( category, title, body );
+
+    spdlog::source_loc loc {
+        context.file ? context.file : "",
+        context.line,
+        context.function ? context.function : ""
+    };
+
+    logger->log( loc, level, consoleLine );
+
+    if ( type == QtFatalMsg ) {
+        abort();
+    }
+}
+
+void init( const Config& cfg ) {
+
+    try {
+
+        std::vector<spdlog::sink_ptr> sinks;
+
+        if (cfg.enableConsole) {
+            auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+            console_sink->set_pattern( "[%Y-%m-%d %H:%M:%S.%e] Thread %-6t %^[%=9l]%$ %v" );
+            sinks.emplace_back(console_sink);
+        }
+
+        if (cfg.enableFile) {
+            // File Sink (Rotação Diária)
+            // Dica: Certifique-se que a pasta 'logs' existe ou use QStandardPaths
+            auto file_sink { std::make_shared<spdlog::sinks::daily_file_sink_mt>( "logs/infinity.log", 23, 59 ) };
+            file_sink->set_formatter( std::make_unique<JsonFormatter>() );
+            sinks.emplace_back( file_sink );
+        }
+
+        auto logger { std::make_shared<spdlog::logger>( "main", sinks.begin(), sinks.end() ) };
+
+        const int logLevel { std::clamp(cfg.level, static_cast<int>(spdlog::level::trace),
+                                                   static_cast<int>(spdlog::level::off)) };
+
+        logger->set_level( static_cast<spdlog::level::level_enum>( logLevel ) );
+
+        logger->flush_on( spdlog::level::info );
+
+        spdlog::register_logger( logger );
+        spdlog::set_default_logger( logger );
+
+        // Instala o hook no Qt
+        qInstallMessageHandler( qtMessageHandler );
+
+        qCInfo( qoneSdk ) << Title( "Logger"_L1 ) << "Logging system initialized successfully.";
+        qCDebug( qoneSdk ) << Title( "Available Logging Categories :"_L1 ) << availableCategories();
+
+    } catch ( const spdlog::spdlog_ex& ex ) {
+        qCCritical( qoneSdk ) << "Log init failed: "_L1 << ex.what();
+    }
+}
+
+void printBanner( const QString& message, Infinity::Logging::Type type ) {
+
+    const auto logger = spdlog::get( "main" );
+
+    if ( logger ) {
+        logger->flush();
+    }
+
+    const QString paddedMsg = QString(" "_L1 % message).leftJustified(MAX_LINE_WIDTH, u' ');
+
+    fmt::color bg;
+    fmt::color fg;
+
+    switch ( type ) {
+        case Type::Debug:
+            bg = fmt::color::light_gray;
+            fg = fmt::color::black;
+            break;
+        case Type::Info:
+            bg = fmt::color::cyan;
+            fg = fmt::color::black;
+            break;
+        case Type::Warning:
+            bg = fmt::color::yellow;
+            fg = fmt::color::black;
+            break;
+        case Type::Critical:
+            bg = fmt::color::orange;
+            fg = fmt::color::black;
+            break;
+        case Type::Fatal:
+            bg = fmt::color::red;
+            fg = fmt::color::white;
+            break;
+        default:
+            break;
+    }
+
+    fmt::print( fmt::bg( bg ) | fmt::fg( fg ), "{}\n", paddedMsg.toStdString() );
+}
+
+const QVariantList availableCategories() {
+    return { ${LOG_CATEGORY_LIST} };
+}
+
+} // namespace Infinity::Logging
+
+// clang-format on

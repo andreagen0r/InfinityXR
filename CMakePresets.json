@@ -1,0 +1,185 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 4,
+    "minor": 0,
+    "patch": 0
+  },
+
+  "include": [],
+
+  "vendor": {
+    "vcpkg": {
+      "version": "1"
+    }
+  },
+
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "CMAKE_CXX_STANDARD": "20",
+        "CMAKE_CXX_EXTENSIONS": "OFF",
+        "CMAKE_LINKER_TYPE": "LLD",
+        "ENABLE_IPO": "OFF",
+        "ENABLE_WARNINGS": "ON"
+      },
+      "environment": {
+        "CC": "clang",
+        "CXX": "clang++"
+      },
+      "vendor": {
+        "qt.io/QtCreator/1.0": {
+          "AskBeforePresetsReload": false,
+          "AskReConfigureInitialParams": false,
+          "AutorunCMake": true,
+          "PackageManagerAutoSetup": true,
+          "ShowAdvancedOptionsByDefault": true,
+          "ShowSourceSubFolders": false,
+          "UseJunctionsForSourceAndBuildDirectories": true
+        }
+      }
+    },
+
+    {
+      "name": "docs",
+      "displayName": "Docs (Doxygen)",
+      "inherits": "base",
+      "cacheVariables": {
+        "ENABLE_DOXYGEN": "ON"
+      }
+    },
+
+    {
+      "name": "dev-debug",
+      "displayName": "Debug (Developer)",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+
+    {
+      "name": "dev-release",
+      "displayName": "Release (Developer)",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "ENABLE_IPO": "ON"
+      }
+    },
+
+    {
+      "name": "dev-relwithdebinfo",
+      "displayName": "RelWithDebInfo (Developer)",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+
+    {
+      "name": "asan",
+      "displayName": "AddressSanitizer",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ENABLE_SANITIZER_ADDRESS": "ON",
+        "ENABLE_SANITIZER_LEAK": "ON"
+      }
+    },
+
+    {
+      "name": "tsan",
+      "displayName": "ThreadSanitizer",
+      "inherits": "base",
+      "cacheVariables": {
+        "ENABLE_SANITIZER_THREAD": "ON"
+      }
+    },
+
+    {
+      "name": "package",
+      "displayName": "Packaging",
+      "inherits": "dev-release",
+      "cacheVariables": {
+        "CPACK_GENERATOR": "DEB",
+        "CPACK_PACKAGE_CONTACT": "dev-team@example.com",
+        "CPACK_DEBIAN_PACKAGE_MAINTAINER": "dev-team"
+      }
+    },
+
+    {
+      "name": "ci",
+      "displayName": "CI (Minimal + Deterministic)",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "OFF",
+        "BUILD_TESTING": "ON"
+      },
+      "environment": {
+        "CI": "true"
+      }
+    }
+  ],
+
+  "buildPresets": [
+    {
+      "name": "build-debug",
+      "configurePreset": "dev-debug"
+    },
+    {
+      "name": "build-release",
+      "configurePreset": "dev-release"
+    },
+    {
+      "name": "build-relwithdebinfo",
+      "configurePreset": "dev-relwithdebinfo"
+    },
+    {
+      "name": "build-asan",
+      "configurePreset": "asan"
+    },
+    {
+      "name": "build-tsan",
+      "configurePreset": "tsan"
+    },
+    {
+      "name": "build-package",
+      "configurePreset": "package"
+    },
+    {
+      "name": "build-ci",
+      "configurePreset": "ci"
+    },
+    {
+      "name": "build-docs",
+      "configurePreset": "docs",
+      "targets": [ "documentation" ]
+    }
+  ],
+
+  "testPresets": [
+    {
+      "name": "test-ci",
+      "configurePreset": "ci",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ],
+
+  "packagePresets": [
+    {
+      "name": "deb",
+      "configurePreset": "package",
+      "generators": [ "DEB" ]
+    }
+  ]
+}
