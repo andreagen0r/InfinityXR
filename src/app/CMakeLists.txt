@@ -32,8 +32,6 @@ set(SRC_BOOTSTRAP
 )
 
 set(SRC_SERVICES
-    "services/thememanager.h"
-    "services/thememanager.cpp"
     "services/screenhelper.h"
     "services/screenhelper.cpp"
     "services/systemsignalhandler.h"

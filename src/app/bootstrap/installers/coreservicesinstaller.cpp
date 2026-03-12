@@ -32,7 +32,6 @@
 #include <Infinity/core/kernel/pluginmanager.h>
 
 #include <services/systemsignalhandler.h>
-#include <services/thememanager.h>
 
 using namespace Qt::StringLiterals;
 
