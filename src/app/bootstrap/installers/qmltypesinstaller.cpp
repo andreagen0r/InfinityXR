@@ -14,6 +14,7 @@
 #include <Infinity/core/ui/menumodel.h>
 #include <Infinity/core/ui/preferencesmenumodel.h>
 #include <Infinity/core/ui/pluginlistmodel.h>
+#include <Infinity/core/ui/notificationfiltermodel.h>
 
 #include <Infinity/core/kernel/pluginmanager.h>
 #include <Infinity/core/kernel/contextextensionhandler.h>
@@ -22,6 +23,7 @@
 #include <Infinity/core/kernel/preferencesextensionhandler.h>
 
 #include <Infinity/core/services/serviceregistry.h>
+#include <Infinity/core/services/notificationservice.h>
 
 #include <authextensionhandler.h>
 
@@ -50,6 +52,12 @@ void QmlTypesInstaller::registerQmlTypes( AppBootstrapContext& ctx ) {
                                                                     ctx.preferencesMenuModel.get() );
     qmlRegisterSingletonInstance<qone::core::PluginListModel>( uri, 1, 0, "PluginListModel",
                                                                ctx.pluginListModel.get() );
+
+    qmlRegisterSingletonInstance<qone::core::NotificationService>( uri, 1, 0, "NotificationService",
+                                                                   ctx.notificationService.get() );
+    qmlRegisterType<qone::core::NotificationFilterModel>( uri, 1, 0, "NotificationFilterModel" );
+
+    QQmlEngine::setObjectOwnership( ctx.notificationService.get(), QQmlEngine::CppOwnership );
 }
 
 void PluginSystemInstaller::configurePlugins( AppBootstrapContext& ctx ) {

@@ -5,7 +5,7 @@ project(InfinityCore
     LANGUAGES CXX
 )
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml LinguistTools)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml LinguistTools Sql)
 
 include(QtBootstrap)
 
@@ -43,6 +43,8 @@ set(SRC_UI
     "src/ui/menumodel.cpp"
     "src/ui/preferencesmenumodel.cpp"
     "src/ui/pluginlistmodel.cpp"
+    "src/ui/notificationmodel.cpp"
+    "src/ui/notificationfiltermodel.cpp"
 )
 
 # Interaction
@@ -59,6 +61,8 @@ set(SRC_SERVICES
     "src/services/dialogservice.cpp"
     "src/services/preferencesregistry.cpp"
     "src/services/httpservice.cpp"
+    "src/services/sqlitenotificationrepository.cpp"
+    "src/services/notificationservice.cpp"
 )
 
 # messaging
@@ -91,6 +95,8 @@ set(HDR_UI
     "include/Infinity/core/ui/preferencesmenumodel.h"
     "include/Infinity/core/ui/systemuimanifest.h"
     "include/Infinity/core/ui/pluginlistmodel.h"
+    "include/Infinity/core/ui/notificationmodel.h"
+    "include/Infinity/core/ui/notificationfiltermodel.h"
 )
 
 set(HDR_INTERACTION
@@ -105,6 +111,8 @@ set(HDR_SERVICES
     "include/Infinity/core/services/serviceregistry.h"
     "include/Infinity/core/services/preferencesregistry.h"
     "include/Infinity/core/services/httpservice.h"
+    "include/Infinity/core/services/sqlitenotificationrepository.h"
+    "include/Infinity/core/services/notificationservice.h"
 )
 
 set(HDR_UTILS
@@ -198,6 +206,7 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
         Qt6::Core
         Qt6::Gui
+        Qt6::Sql
 )
 
 

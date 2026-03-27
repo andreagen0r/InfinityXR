@@ -28,6 +28,7 @@ class PluginManager;
 class PluginListModel;
 class PreferencesMenuModel;
 class HttpService;
+class NotificationService;
 
 } // namespace qone::core
 
@@ -62,6 +63,7 @@ struct AppBootstrapContext {
     std::unique_ptr<qone::core::PluginListModel> pluginListModel;
     std::unique_ptr<qone::core::PreferencesMenuModel> preferencesMenuModel;
     std::unique_ptr<qone::core::HttpService> httpService;
+    std::shared_ptr<qone::core::NotificationService> notificationService;
 
     SystemSignalHandler* signalHandler { nullptr };
 

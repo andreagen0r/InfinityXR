@@ -33,8 +33,10 @@ list(APPEND LOGGING_CATEGORIES "SdkPlugin")
 list(APPEND LOGGING_CATEGORIES "SdkAuth")
 list(APPEND LOGGING_CATEGORIES "SdkHttp")
 list(APPEND LOGGING_CATEGORIES "SdkCommand")
+list(APPEND LOGGING_CATEGORIES "SdkSql")
 
 list(APPEND LOGGING_CATEGORIES "Core")
+list(APPEND LOGGING_CATEGORIES "CoreSql")
 list(APPEND LOGGING_CATEGORIES "Network")
 list(APPEND LOGGING_CATEGORIES "Models")
 list(APPEND LOGGING_CATEGORIES "Style")
@@ -102,6 +104,7 @@ set(SDK_HEADERS_INTERFACES
     "${SDK_INTERFACES_BASE_DIR}/IEventSubscriber.h"
     "${SDK_INTERFACES_BASE_DIR}/IEventBus.h"
     "${SDK_INTERFACES_BASE_DIR}/IHttpService.h"
+    "${SDK_INTERFACES_BASE_DIR}/INotificationRepository.h"
     )
 
 set(SDK_HEADERS_TYPES
@@ -116,6 +119,8 @@ set(SDK_HEADERS_TYPES
     "${SDK_TYPES_BASE_DIR}/CommandId.h"
     "${SDK_TYPES_BASE_DIR}/ViewId.h"
     "${SDK_TYPES_BASE_DIR}/EventSubscription.h"
+    "${SDK_TYPES_BASE_DIR}/NotificationDescriptor.h"
+    "${SDK_TYPES_BASE_DIR}/NotificationEvents.h"
 )
 
 

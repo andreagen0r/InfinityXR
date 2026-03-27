@@ -83,6 +83,9 @@ qone::sdk::PluginDescriptor PluginScanner::parsePluginDir( const QDir& pluginDir
     // Extracting Metadata using QPluginLoader
     // This reads the embedded JSON via Q_PLUGIN_METADATA without loading the DLL into memory
     QPluginLoader loader( descriptor.libraryPath );
+    // Importante para não ter erros de name mangling entre os módulos e plugins
+    loader.setLoadHints( QLibrary::ResolveAllSymbolsHint | QLibrary::ExportExternalSymbolsHint );
+
     const QJsonObject metaData = loader.metaData();
 
     const QJsonObject obj = metaData.value( "MetaData"_L1 ).toObject();

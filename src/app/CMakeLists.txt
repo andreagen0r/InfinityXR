@@ -14,7 +14,7 @@ set(QML_IMPORT_PATH ${QML_IMPORT_PATH}
 )
 
 # Herda outros packages do CMakeLists raiz
-find_package(Qt6 REQUIRED COMPONENTS Qml Quick QuickControls2)
+find_package(Qt6 REQUIRED COMPONENTS Qml Quick QuickControls2 Sql)
 
 # -----------------------------------------------------------------------------
 # Organização dos Fontes (Source Groups para IDEs)
@@ -64,10 +64,13 @@ qt_add_qml_module(${PROJECT_NAME}
         views/MenuItemLoader.qml
         views/DialogManager.qml
         views/PreferencesDialog.qml
+        views/ToastItem.qml
+        views/CircularProgress.qml
     SOURCES
         ${SRC_SERVICES}
     IMPORTS
         qone.SplashScreen
+        QML_FILES views/NotificationOverlay.qml
 )
 
 
@@ -104,6 +107,7 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
     Qt6::Quick
     Qt6::QuickControls2
+    Qt6::Sql
     my_options # TODO: Add a comment into the documentation
     Infinity::Version # Gerado automaticamente pelo GitWatcher.cmake
     Infinity::SDK

@@ -7,6 +7,7 @@
 #include <Infinity/sdk/logging/logger.h>
 #include <Infinity/sdk/contracts/IDialogService.h>
 #include <Infinity/sdk/contracts/IEventBusService.h>
+#include <Infinity/sdk/contracts/INotificationRepository.h>
 
 #include <Infinity/core/messaging/eventbus.h>
 
@@ -15,6 +16,8 @@
 #include <Infinity/core/services/serviceregistry.h>
 #include <Infinity/core/services/preferencesregistry.h>
 #include <Infinity/core/services/httpservice.h>
+#include <Infinity/core/services/notificationservice.h>
+#include <Infinity/core/services/sqlitenotificationrepository.h>
 
 #include <Infinity/core/interaction/commandregistry.h>
 #include <Infinity/core/interaction/actiondispatcher.h>
@@ -37,18 +40,13 @@ using namespace Qt::StringLiterals;
 
 namespace qone::infinity {
 
-class EventBusServiceProvider : public qone::sdk::IEventBusService {
-public:
-    explicit EventBusServiceProvider( qone::sdk::IEventBus* bus, QObject* parent = nullptr )
-        : qone::sdk::IEventBusService( parent )
-        , m_bus( bus ) {}
-    qone::sdk::IEventBus* bus() const override {
-        return m_bus;
-    }
+EventBusServiceProvider::EventBusServiceProvider( qone::sdk::IEventBus* bus, QObject* parent )
+    : qone::sdk::IEventBusService( parent )
+    , m_bus( bus ) {}
 
-private:
-    qone::sdk::IEventBus* m_bus;
-};
+qone::sdk::IEventBus* EventBusServiceProvider::bus() const {
+    return m_bus;
+}
 
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -97,6 +95,13 @@ void CoreServicesInstaller::installServices( AppBootstrapContext& ctx ) {
 
     ctx.serviceRegistry->registerService( QString::fromUtf8( qone::sdk::IHttpService::IID ), "SystemCore"_L1,
                                           ctx.httpService.get() );
+
+    auto notificationRepo = std::make_shared<qone::core::SqliteNotificationRepository>();
+
+    ctx.serviceRegistry->registerService( QString::fromUtf8( qone::sdk::INotificationRepository::IID ), "SystemCore"_L1,
+                                          notificationRepo.get() );
+
+    ctx.notificationService = std::make_shared<qone::core::NotificationService>( ctx.eventBus, notificationRepo );
 }
 
 void UiAndThemeInstaller::installServices( AppBootstrapContext& ctx ) {
